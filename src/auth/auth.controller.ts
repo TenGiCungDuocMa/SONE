@@ -1,8 +1,8 @@
-import { BadRequestException, Body, Controller, HttpException, HttpStatus, Logger, Post } from '@nestjs/common';
+import { BadRequestException, Body, Controller, HttpException, HttpStatus, Logger, Post, Req } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { BaseResponse } from '../response/BaseResponse';
-
+import { VerifySignatureDto } from './dto/VerifySignature';
 @ApiTags("Authentication")
 @Controller('auth')
 export class AuthController {
@@ -45,4 +45,56 @@ export class AuthController {
       );
     }
   }
+  
+  @Post("verify-signature")
+  // @UseGuards(ThrottlerGuard)
+  @ApiOperation({
+    summary: "Verify the signature and generate JWT",
+    description: "Verifies the user's signature and generates a JWT token if verification is successful.",
+  })
+  @ApiResponse({ status: 200, description: "Signature verified successfully" })
+  @ApiResponse({ status: 400, description: "Invalid input data" })
+  @ApiResponse({ status: 429, description: "Too many requests" })
+  @ApiResponse({ status: 500, description: "Internal server error" })
+  async verifySignature(
+    @Req() req: any,
+    @Body() verifySignatureDto: VerifySignatureDto
+  ) {
+    try {
+      const { address, signature, referralCode } = verifySignatureDto;
+
+      this.logger.log(`Verifying signature for address: ${address}${referralCode ? ` with referral: ${referralCode}` : ''}`);
+
+      const res = await this.authService.verifySignature(
+        req,
+        address,
+        signature,
+        referralCode
+      );
+
+      this.logger.log(`Signature verified successfully for address: ${address}`);
+
+      return new BaseResponse(
+        true,
+        "Signature verified and JWT token generated successfully.",
+        res
+      );
+    } catch (error) {
+      this.logger.error(`Signature verification failed: ${error.message}`, {
+        address: verifySignatureDto.address,
+        referralCode: verifySignatureDto.referralCode,
+        error: error.stack,
+      });
+
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+
+      throw new HttpException(
+        new BaseResponse(false, error.message || "Failed to verify signature", null),
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
+
 }

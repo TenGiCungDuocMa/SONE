@@ -1,7 +1,8 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { User } from './schemas/user.schema';
 import { Model } from 'mongoose';
+import { verifyMessage } from "ethers";
 import { TokenBlocklist } from 'src/shared/schemas/token-blocklist.schema';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -69,4 +70,73 @@ export class AuthService {
       message
     };
   }
+  async verifySignature(
+    req: any,
+    address: string,
+    signature: string,
+    referralCode?: string
+  ) {
+    const user = await this.userModel.findOne({ address });
+    if (!user) {
+      throw new NotFoundException("User not found");
+    }
+
+    const domain = "";
+    const statement = "Sign in with Monad to the app.";
+    const uri = "";
+    const version = "1";
+    const chainId = 10143;
+    const nonce = user.nonce.toString();
+
+    const message =
+      `${domain} wants you to sign in with your Monad account: ${address}\n` +
+      `Game: Sone App\n` +
+      `Statement: ${statement}\n` +
+      `URI: ${uri}\n` +
+      `Version: ${version}\n` +
+      `Chain ID: ${chainId}\n` +
+      `Nonce: ${nonce}`.trim();
+
+    const recovered = verifyMessage(message, signature);
+
+    if (recovered.toLowerCase() !== address.toLowerCase()) {
+      throw new Error("Signature verification failed");
+    }
+
+    if (referralCode) {
+      try {
+        await this.referralService.processReferral(referralCode, address);
+      } catch (error) {
+        this.logger.error("Referral processing failed:", error.message);
+        // Không throw lỗi để người dùng vẫn có thể đăng nhập
+      }
+    }
+
+    user.nonce = Math.floor(Math.random() * 1000000);
+    await user.save();
+
+    const payload = {
+      sub: user._id,
+      address: user.address,
+      iat: Math.floor(Date.now() / 1000),
+    };
+    const token = this.jwtService.sign(payload);
+
+    const refreshToken = this.jwtService.sign(payload, {
+      expiresIn: '7d',
+    });
+
+    const result = {
+      token,
+      refreshToken,
+      user: {
+        address: user.address,
+        referralCode: user.referralCode,
+        rank: null,
+        points: 0
+      }
+    };
+    return result;
+  }
+
 }
