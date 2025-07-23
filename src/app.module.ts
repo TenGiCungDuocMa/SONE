@@ -12,6 +12,8 @@ import { JwtModule } from '@nestjs/jwt';
 import { MongooseModule } from '@nestjs/mongoose';
 import { CustomHeaderMiddleware } from './middleware/CustomHeaderMiddleware';
 import { SharedModelModule } from './shared/shared-model.module';
+import { PassportModule } from '@nestjs/passport';
+import { JwtStrategy } from './services/JwtStrategy';
 // import { UserModule } from './user/user.module';
 
 @Module({
@@ -24,6 +26,7 @@ import { SharedModelModule } from './shared/shared-model.module';
       }),
       inject: [ConfigService],
     }),
+    PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
@@ -37,7 +40,7 @@ import { SharedModelModule } from './shared/shared-model.module';
     // UserModule
   ],
   controllers: [AppController, ReferralController],
-  providers: [AppService, ReferralService, PointService],
+  providers: [AppService, ReferralService, PointService, JwtStrategy],
 })
 export class AppModule implements OnModuleInit {
 
