@@ -12,12 +12,12 @@ export class GetReferralsQueryDto {
     @Min(1)
     @IsOptional()
     @ApiProperty({ default: 1 })
-    page?: number = 1;
+    page: number = 1;
 
     @IsNumber()
     @Min(1)
     @Max(100)
     @IsOptional()
     @ApiProperty({ default: 10 })
-    limit?: number = 10;
+    limit: number = 10;
 } 
