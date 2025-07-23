@@ -1,6 +1,6 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { User } from './schemas/user.schema';
+import { User, UserDocument } from './schemas/user.schema';
 import { Model } from 'mongoose';
 import { verifyMessage } from "ethers";
 import { TokenBlocklist } from 'src/shared/schemas/token-blocklist.schema';
@@ -13,7 +13,7 @@ export class AuthService {
   private readonly logger = new Logger(AuthService.name);
 
   constructor(
-    @InjectModel(User.name) private readonly userModel: Model<User>,
+    @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
     @InjectModel(TokenBlocklist.name)
     private readonly tokenBlocklistModel: Model<TokenBlocklist>,
     private jwtService: JwtService,
@@ -49,9 +49,9 @@ export class AuthService {
       await user.save();
     }
 
-    const domain = "https://fukunad.xyz/";
+    const domain = "https://sone.xyz/";
     const statement = "Sign in with Monad to the app.";
-    const uri = "https://fukunad.xyz/";
+    const uri = "https://sone.xyz/";
     const version = "1";
     const chainId = 10143;
     const nonce = user.nonce.toString();

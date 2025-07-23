@@ -11,12 +11,12 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { MongooseModule } from '@nestjs/mongoose';
 import { CustomHeaderMiddleware } from './middleware/CustomHeaderMiddleware';
+import { SharedModelModule } from './shared/shared-model.module';
+// import { UserModule } from './user/user.module';
 
 @Module({
-  imports: [AuthModule, ReferralModule, PointModule,
-    ConfigModule.forRoot({
-      isGlobal: true,
-    }),
+  imports: [AuthModule, ReferralModule, PointModule,SharedModelModule,
+    ConfigModule.forRoot({isGlobal: true,}),
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
@@ -33,7 +33,9 @@ import { CustomHeaderMiddleware } from './middleware/CustomHeaderMiddleware';
         },
       }),
       inject: [ConfigService],
-    })],
+    }),
+    // UserModule
+  ],
   controllers: [AppController, ReferralController],
   providers: [AppService, ReferralService, PointService],
 })

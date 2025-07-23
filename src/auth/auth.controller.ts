@@ -1,4 +1,14 @@
-import { BadRequestException, Body, Controller, HttpException, HttpStatus, Logger, Post, Req } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  HttpException,
+  HttpStatus,
+  Logger,
+  Param,
+  Post,
+  Req,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { BaseResponse } from '../response/BaseResponse';
@@ -9,7 +19,7 @@ export class AuthController {
   private readonly logger = new Logger(AuthController.name);
   constructor(private readonly authService: AuthService) {}
 
-  @Post("request-signature")
+  @Post("request-signature/:address")
   @ApiOperation({
     summary: "Request a signature message",
     description: "Generates a message for the user to sign using their wallet.",
@@ -17,7 +27,7 @@ export class AuthController {
   @ApiResponse({ status: 200, description: "Message generated successfully" })
   @ApiResponse({ status: 400, description: "Invalid address format" })
   @ApiResponse({ status: 429, description: "Too many requests" })
-  async requestSignature(@Body("address") address: string) {
+  async requestSignature(@Param("address") address: string) {
     try {
       this.logger.log(`Signature request received for address: ${address}`);
 
