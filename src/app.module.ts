@@ -18,7 +18,7 @@ import { JwtStrategy } from './services/JwtStrategy';
 
 @Module({
   imports: [AuthModule, ReferralModule, PointModule,SharedModelModule,
-    ConfigModule.forRoot({isGlobal: true,}),
+    ConfigModule.forRoot({isGlobal: true, envFilePath: ['.env', '.env.local']}),
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({

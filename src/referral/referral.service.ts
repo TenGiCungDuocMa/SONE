@@ -34,7 +34,7 @@ export class ReferralService {
     // Tìm tất cả referral liên quan đến user
     const referrals = await this.referralModel.find({
       $or: [
-        { referrer: user._id },
+        // { referrer: user._id },
         { referred: user._id },
       ],
     })
@@ -91,7 +91,7 @@ export class ReferralService {
 
   async processReferral(referralCode: string, referredAddress: string): Promise<void> {
     // Tìm người giới thiệu bằng referralCode
-    const referrer = await this.userModel.findOne({ referralCode });
+    const referrer = await this.userModel.findOne({ referralCode:referralCode });
     if (!referrer) {
       throw new BadRequestException('Invalid referral code');
     }
@@ -104,7 +104,8 @@ export class ReferralService {
 
     // Kiểm tra xem người dùng đã được giới thiệu chưa
     const existingReferral = await this.referralModel.findOne({
-      referred: referred._id
+      referred: referred._id,
+      // referred: referred._id,
     });
     if (existingReferral) {
       throw new BadRequestException('User already has a referrer');

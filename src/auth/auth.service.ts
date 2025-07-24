@@ -26,8 +26,7 @@ export class AuthService {
       throw new Error("Invalid Ethereum address");
     }
 
-    let user = await this.userModel.findOne({ address: address });
-
+    let user = await this.userModel.findOne({address:address})
     if (!user) {
       // Tạo referralCode ngay khi tạo người dùng mới
       const referralCodeUser = `${address.slice(2, 8)}-${Date.now().toString(36)}`;
@@ -76,21 +75,21 @@ export class AuthService {
     signature: string,
     referralCode?: string
   ) {
-    const user = await this.userModel.findOne({ address });
+    const user = await this.userModel.findOne({ address:address });
     if (!user) {
       throw new NotFoundException("User not found");
     }
 
-    const domain = "";
+    const domain = "https://sone.xyz/";
     const statement = "Sign in with Monad to the app.";
-    const uri = "";
+    const uri = "https://sone.xyz/";
     const version = "1";
-    const chainId = 0;
+    const chainId = 10143;
     const nonce = user.nonce.toString();
 
     const message =
       `${domain} wants you to sign in with your Monad account: ${address}\n` +
-      `Game: Sone App\n` +
+      `Game: Fuku App\n` +
       `Statement: ${statement}\n` +
       `URI: ${uri}\n` +
       `Version: ${version}\n` +
@@ -99,36 +98,45 @@ export class AuthService {
 
     const recovered = verifyMessage(message, signature);
 
+    this.logger.log(`Recovered address: ${recovered}, Expected address: ${address}`);
+
     if (recovered.toLowerCase() !== address.toLowerCase()) {
       throw new Error("Signature verification failed");
     }
 
-    if (referralCode) {
-      try {
-        await this.referralService.processReferral(referralCode, address);
-      } catch (error) {
-        this.logger.error("Referral processing failed:", error.message);
-        // Không throw lỗi để người dùng vẫn có thể đăng nhập
-      }
-    }
+    this.logger.warn(`referralCode: ${referralCode}`);
 
+    // if (referralCode) {
+    //   try {
+    //     await this.referralService.processReferral(referralCode, address);
+    //   } catch (error) {
+    //     this.logger.error("Referral processing failed:", error.message);
+    //     // Không throw lỗi để người dùng vẫn có thể đăng nhập
+    //   }
+    // }
+    // this.logger.error(`1`);
     user.nonce = Math.floor(Math.random() * 1000000);
     await user.save();
+    //
+    // const payload = {
+    //   sub: user._id,
+    //   address: user.address,
+    //   iat: Math.floor(Date.now() / 1000),
+    // };
+    // this.logger.error(`2`);
+    //
+    // const token = this.jwtService.sign(payload);
+    this.logger.error(`3`);
+    this.logger.warn(`Token generated for user: ${user.address}`);
+    // const refreshToken = this.jwtService.sign(payload, {
+    //   expiresIn: '7d',
+    // });
 
-    const payload = {
-      sub: user._id,
-      address: user.address,
-      iat: Math.floor(Date.now() / 1000),
-    };
-    const token = this.jwtService.sign(payload);
-
-    const refreshToken = this.jwtService.sign(payload, {
-      expiresIn: '7d',
-    });
+    this.logger.error(`4`);
 
     const result = {
-      token,
-      refreshToken,
+      // token,
+      // refreshToken,
       user: {
         address: user.address,
         referralCode: user.referralCode,
@@ -136,6 +144,8 @@ export class AuthService {
         points: 0
       }
     };
+    this.logger.error(`5`);
+
     return result;
   }
   async logout(token: string): Promise<{ success: boolean }> {
