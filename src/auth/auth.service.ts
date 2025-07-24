@@ -2,7 +2,7 @@ import { Injectable, Logger, NotFoundException, UnauthorizedException } from '@n
 import { InjectModel } from '@nestjs/mongoose';
 import { User, UserDocument } from './schemas/user.schema';
 import { Model } from 'mongoose';
-import { verifyMessage } from "ethers";
+import { verifyMessage } from 'ethers';
 import { TokenBlocklist } from 'src/shared/schemas/token-blocklist.schema';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -19,14 +19,20 @@ export class AuthService {
     private jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly referralService: ReferralService,
-  ) { }
+  ) {
+    const secret = configService.get<string>('JWT_SECRET');
+    if (!secret) {
+      this.logger.error('JWT_SECRET is not defined');
+      throw new Error('JWT configuration error');
+    }
+  }
 
   async requestMessage(address: string) {
     if (!address || address.length < 42 || !/^0x[a-fA-F0-9]{40}$/.test(address)) {
-      throw new Error("Invalid Ethereum address");
+      throw new Error('Invalid Ethereum address');
     }
 
-    let user = await this.userModel.findOne({address:address})
+    let user = await this.userModel.findOne({ address: address });
     if (!user) {
       // Tạo referralCode ngay khi tạo người dùng mới
       const referralCodeUser = `${address.slice(2, 8)}-${Date.now().toString(36)}`;
@@ -34,7 +40,7 @@ export class AuthService {
       user = await this.userModel.create({
         address,
         nonce: Math.floor(Math.random() * 1000000),
-        referralCode: referralCodeUser
+        referralCode: referralCodeUser,
       });
     } else if (!user.referralCode) {
       // Nếu người dùng đã tồn tại nhưng không có referralCode, tạo mới
@@ -48,10 +54,10 @@ export class AuthService {
       await user.save();
     }
 
-    const domain = "https://sone.xyz/";
-    const statement = "Sign in with Monad to the app.";
-    const uri = "https://sone.xyz/";
-    const version = "1";
+    const domain = 'https://sone.xyz/';
+    const statement = 'Sign in with Monad to the app.';
+    const uri = 'https://sone.xyz/';
+    const version = '1';
     const chainId = 10143;
     const nonce = user.nonce.toString();
 
@@ -66,24 +72,25 @@ export class AuthService {
 
     return {
       address: user.address,
-      message
+      message,
     };
   }
+
   async verifySignature(
     req: any,
     address: string,
     signature: string,
-    referralCode?: string
+    referralCode?: string,
   ) {
-    const user = await this.userModel.findOne({ address:address });
+    const user = await this.userModel.findOne({ address: address });
     if (!user) {
-      throw new NotFoundException("User not found");
+      throw new NotFoundException('User not found');
     }
 
-    const domain = "https://sone.xyz/";
-    const statement = "Sign in with Monad to the app.";
-    const uri = "https://sone.xyz/";
-    const version = "1";
+    const domain = 'https://sone.xyz/';
+    const statement = 'Sign in with Monad to the app.';
+    const uri = 'https://sone.xyz/';
+    const version = '1';
     const chainId = 10143;
     const nonce = user.nonce.toString();
 
@@ -98,13 +105,9 @@ export class AuthService {
 
     const recovered = verifyMessage(message, signature);
 
-    this.logger.log(`Recovered address: ${recovered}, Expected address: ${address}`);
-
     if (recovered.toLowerCase() !== address.toLowerCase()) {
-      throw new Error("Signature verification failed");
+      throw new Error('Signature verification failed');
     }
-
-    this.logger.warn(`referralCode: ${referralCode}`);
 
     // if (referralCode) {
     //   try {
@@ -115,39 +118,43 @@ export class AuthService {
     //   }
     // }
     // this.logger.error(`1`);
+
     user.nonce = Math.floor(Math.random() * 1000000);
     await user.save();
-    //
-    // const payload = {
-    //   sub: user._id,
-    //   address: user.address,
-    //   iat: Math.floor(Date.now() / 1000),
-    // };
-    // this.logger.error(`2`);
-    //
-    // const token = this.jwtService.sign(payload);
-    this.logger.error(`3`);
-    this.logger.warn(`Token generated for user: ${user.address}`);
-    // const refreshToken = this.jwtService.sign(payload, {
-    //   expiresIn: '7d',
-    // });
 
-    this.logger.error(`4`);
+    if (!user?._id || !user?.address) {
+      throw new Error('User ID or address is missing');
+    }
+
+    const payload = {
+      sub: user._id,
+      address: user.address,
+      iat: Math.floor(Date.now() / 1000),
+    };
+
+    const token = await this.jwtService.signAsync(payload,
+      {secret: this.configService.get<string>('JWT_SECRET')});
+    // if (!token) {
+    //   const refreshToken = await this.jwtService.signAsync(payload, {
+    //     expiresIn: '7d',
+    //     secret: this.configService.get<string>('JWT_SECRET')
+    //   });
+    // }
 
     const result = {
-      // token,
+      token,
       // refreshToken,
       user: {
         address: user.address,
         referralCode: user.referralCode,
         rank: null,
-        points: 0
-      }
+        points: 0,
+      },
     };
-    this.logger.error(`5`);
 
     return result;
   }
+
   async logout(token: string): Promise<{ success: boolean }> {
     try {
       // Decode the token to extract payload
@@ -155,11 +162,11 @@ export class AuthService {
 
       if (
         !decodedToken ||
-        typeof decodedToken !== "object" ||
-        !("exp" in decodedToken)
+        typeof decodedToken !== 'object' ||
+        !('exp' in decodedToken)
       ) {
         this.logger.warn(`Invalid or malformed token: ${token}`);
-        throw new UnauthorizedException("Invalid token structure");
+        throw new UnauthorizedException('Invalid token structure');
       }
 
       const expirationTime = (decodedToken as { exp: number }).exp;
@@ -167,7 +174,7 @@ export class AuthService {
       if (!expirationTime) {
         this.logger.warn(`Token is missing expiration time: ${token}`);
         throw new UnauthorizedException(
-          "Token does not contain an expiration time"
+          'Token does not contain an expiration time',
         );
       }
 
@@ -191,7 +198,7 @@ export class AuthService {
       return { success: true };
     } catch (error) {
       this.logger.error(`Error during logout: ${error.message}`);
-      throw new UnauthorizedException("Logout failed. Please try again later.");
+      throw new UnauthorizedException('Logout failed. Please try again later.');
     }
   }
 
@@ -208,8 +215,8 @@ export class AuthService {
         address: user.address,
         referralCode: user.referralCode,
         rank: null,
-        points: 0
-      }
+        points: 0,
+      },
     };
 
     // Lấy thông tin về thứ hạng và điểm với timeout
@@ -241,7 +248,7 @@ export class AuthService {
       return !!blockedToken;
     } catch (error) {
       this.logger.error(`Error checking if token is blocked: ${error.message}`);
-      throw new UnauthorizedException("Error validating token");
+      throw new UnauthorizedException('Error validating token');
     }
   }
 
@@ -250,7 +257,7 @@ export class AuthService {
       return this.jwtService.verify(token);
     } catch (error) {
       this.logger.error(`Token verification failed: ${error.message}`);
-      throw new UnauthorizedException("Invalid token");
+      throw new UnauthorizedException('Invalid token');
     }
   }
 
@@ -281,11 +288,11 @@ export class AuthService {
       };
 
       // Tạo access token mới
-      const accessToken = this.jwtService.sign(payload);
-
+      const accessToken = this.jwtService.sign(payload)
       // Tạo refresh token mới với thời hạn dài hơn
       const newRefreshToken = this.jwtService.sign(payload, {
         expiresIn: '7d', // 7 ngày
+
       });
 
       // Thêm refresh token cũ vào blocklist
@@ -300,7 +307,7 @@ export class AuthService {
         user: {
           address: user.address,
           referralCode: user.referralCode,
-        }
+        },
       };
     } catch (error) {
       this.logger.error(`Failed to refresh token: ${error.message}`);

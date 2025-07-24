@@ -181,13 +181,13 @@ export class AuthController {
     }
   }
 
-  @Post("check-token")
+  @Post("check-token/:token")
   @ApiOperation({
     summary: "Check if token is valid",
     description: "Checks if the provided token is valid and not in the blocklist.",
   })
   @ApiResponse({ status: 200, description: "Token status checked successfully" })
-  async checkToken(@Body("token") token: string) {
+  async checkToken(@Param("token") token: string) {
     try {
       this.logger.log(`Checking token validity`);
 
@@ -302,14 +302,14 @@ export class AuthController {
     }
   }
 
-  @Post("refresh-token")
+  @Post("refresh-token/:refreshToken")
   @ApiOperation({
     summary: "Refresh JWT token",
     description: "Refreshes the JWT token using a refresh token.",
   })
   @ApiResponse({ status: 200, description: "Token refreshed successfully" })
   @ApiResponse({ status: 401, description: "Invalid refresh token" })
-  async refreshToken(@Body("refreshToken") refreshToken: string) {
+  async refreshToken(@Param("refreshToken") refreshToken: string) {
     try {
       this.logger.log(`Refreshing token`);
 

@@ -105,7 +105,6 @@ export class ReferralService {
     // Kiểm tra xem người dùng đã được giới thiệu chưa
     const existingReferral = await this.referralModel.findOne({
       referred: referred._id,
-      // referred: referred._id,
     });
     if (existingReferral) {
       throw new BadRequestException('User already has a referrer');
