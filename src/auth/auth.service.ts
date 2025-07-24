@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { User, UserDocument } from './schemas/user.schema';
 import { Model } from 'mongoose';
@@ -70,45 +70,43 @@ export class AuthService {
       message
     };
   }
-  async verifySignature(
-    req: any,
-    address: string,
-    signature: string,
-    referralCode?: string
-  ) {
-    const user = await this.userModel.findOne({ address });
-    if (!user) {
-      throw new NotFoundException("User not found");
+  async verifySignature(req: any, address: string, signature: string, referralCode?: string) {
+    if (!address || address.length !== 42 || !/^0x[a-fA-F0-9]{40}$/.test(address)) {
+      throw new BadRequestException('Invalid Ethereum address');
+    }
+    if (!signature || !/^0x[a-fA-F0-9]{130}$/.test(signature)) {
+      throw new BadRequestException('Invalid signature');
     }
 
-    const domain = "";
-    const statement = "Sign in with Monad to the app.";
-    const uri = "";
-    const version = "1";
-    const chainId = 0;
+    const user = await this.userModel.findOne({ address });
+    if (!user) {
+      this.logger.error(`User not found for address: ${address}`);
+      throw new NotFoundException('User not found');
+    }
+
+    const domain = 'https://sone.xyz/';
+    const statement = 'Sign in with Monad to the app.';
+    const uri = 'https://sone.xyz/';
+    const version = '1';
+    const chainId = 10143;
     const nonce = user.nonce.toString();
 
-    const message =
-      `${domain} wants you to sign in with your Monad account: ${address}\n` +
-      `Game: Sone App\n` +
-      `Statement: ${statement}\n` +
-      `URI: ${uri}\n` +
-      `Version: ${version}\n` +
-      `Chain ID: ${chainId}\n` +
-      `Nonce: ${nonce}`.trim();
+    const message = `${domain} wants you to sign in with your Monad account: ${address}\nGame: Fuku App\nStatement: ${statement}\nURI: ${uri}\nVersion: ${version}\nChain ID: ${chainId}\nNonce: ${nonce}`.trim();
+
+    this.logger.log(`Verifying message: ${message}`);
+    this.logger.log(`Received signature: ${signature}`);
 
     const recovered = verifyMessage(message, signature);
-
     if (recovered.toLowerCase() !== address.toLowerCase()) {
-      throw new Error("Signature verification failed");
+      this.logger.error(`Signature verification failed. Recovered: ${recovered}, Expected: ${address}`);
+      throw new UnauthorizedException('Signature verification failed');
     }
 
     if (referralCode) {
       try {
         await this.referralService.processReferral(referralCode, address);
       } catch (error) {
-        this.logger.error("Referral processing failed:", error.message);
-        // Không throw lỗi để người dùng vẫn có thể đăng nhập
+        this.logger.error('Referral processing failed:', error.message);
       }
     }
 
@@ -121,22 +119,18 @@ export class AuthService {
       iat: Math.floor(Date.now() / 1000),
     };
     const token = this.jwtService.sign(payload);
+    const refreshToken = this.jwtService.sign(payload, { expiresIn: '7d' });
 
-    const refreshToken = this.jwtService.sign(payload, {
-      expiresIn: '7d',
-    });
-
-    const result = {
+    return {
       token,
       refreshToken,
       user: {
         address: user.address,
         referralCode: user.referralCode,
         rank: null,
-        points: 0
-      }
+        points: 0,
+      },
     };
-    return result;
   }
   async logout(token: string): Promise<{ success: boolean }> {
     try {

@@ -14,12 +14,26 @@ import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags, ApiUnauthorizedRespo
 import { BaseResponse } from '../response/BaseResponse';
 import { VerifySignatureDto } from './dto/VerifySignature';
 import { JwtAuthGuard } from '../services/JwtAuthGuard';
+import { TestService } from './test.service';
 @ApiTags("Authentication")
 @Controller('auth')
 export class AuthController {
   private readonly logger = new Logger(AuthController.name);
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService, private readonly testService: TestService) {}
 
+  @Get("sign-message/:message")
+  @ApiOperation({
+    summary: "Get sign message",
+    description: "Returns a message for the user to sign using their wallet.",
+  })
+  @ApiResponse({ status: 200, description: "Message retrieved successfully" })
+  @ApiResponse({ status: 400, description: "Invalid address format" })
+  async getSignMessage(@Param("message") message: string) {
+    this.logger.log(`Requesting sign message for: ${message}`);
+    if (!message || typeof message !== 'string') 
+      throw new BadRequestException("Invalid message format");
+    return this.testService.getSignMessage(message);
+  }
   @Post("request-signature/:address")
   @ApiOperation({
     summary: "Request a signature message",

@@ -7,10 +7,10 @@ import { JwtService } from '@nestjs/jwt';
 import { ReferralService } from '../referral/referral.service';
 import { PointService } from '../point/point.service';
 import { JwtAuthGuard } from '../services/JwtAuthGuard';
-
+import { TestService } from './test.service';
 @Module({
   imports: [SharedModelModule, ReferralModule],
   controllers: [AuthController],
-  providers: [AuthService,JwtService,ReferralService,PointService,JwtAuthGuard],
+  providers: [AuthService,ReferralService,PointService,JwtAuthGuard, JwtService, TestService],
 })
 export class AuthModule {}
