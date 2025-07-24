@@ -18,7 +18,7 @@ import { JwtStrategy } from './services/JwtStrategy';
 
 @Module({
   imports: [AuthModule, ReferralModule, PointModule,SharedModelModule,
-    ConfigModule.forRoot({isGlobal: true,}),
+    ConfigModule.forRoot({isGlobal: true, envFilePath: ['.env']}),
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
@@ -36,6 +36,7 @@ import { JwtStrategy } from './services/JwtStrategy';
         },
       }),
       inject: [ConfigService],
+      global: true,
     }),
     // UserModule
   ],
@@ -44,7 +45,9 @@ import { JwtStrategy } from './services/JwtStrategy';
 })
 export class AppModule implements OnModuleInit {
 
-  async onModuleInit() { }
+  async onModuleInit() {
+
+  }
 
   configure(consumer: MiddlewareConsumer) {
     consumer

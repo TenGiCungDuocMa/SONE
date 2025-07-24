@@ -14,3 +14,4 @@ import { TestService } from './test.service';
   providers: [AuthService,ReferralService,PointService,JwtAuthGuard, JwtService, TestService],
 })
 export class AuthModule {}
+ 
