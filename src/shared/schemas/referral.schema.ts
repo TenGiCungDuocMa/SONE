@@ -6,6 +6,9 @@ export type ReferralDocument = Referral & Document;
 
 @Schema({ timestamps: true })
 export class Referral {
+
+    _id: Types.ObjectId;
+
     @Prop({ type: Types.ObjectId, ref: 'User', required: true })
     referrer: Types.ObjectId;
 
