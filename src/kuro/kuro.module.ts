@@ -1,9 +1,15 @@
 import { Module } from '@nestjs/common';
-import { KuroService } from './kuro.service';
 import { KuroController } from './kuro.controller';
+import { KuroService } from './kuro.service';
+import { SharedModelModule } from 'src/shared/shared-model.module';
+import { DepositTrackerService } from './deposit-tracker.service';
+import { KuroSeedService } from './kuro.seed';
+import { JackpotModule } from 'src/jackpot/jackpot.module';
 
 @Module({
+  imports: [SharedModelModule, JackpotModule],
   controllers: [KuroController],
-  providers: [KuroService],
+  providers: [KuroService, DepositTrackerService, KuroSeedService],
+  exports: [KuroService, DepositTrackerService, KuroSeedService]
 })
-export class KuroModule {}
+export class KuroModule { }

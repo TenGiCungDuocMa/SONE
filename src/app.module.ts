@@ -17,6 +17,9 @@ import { JwtStrategy } from './services/JwtStrategy';
 // import { UserModule } from './user/user.module';
 import { KuroModule } from './kuro/kuro.module';
 import { SocketModule } from './socket/socket.module';
+import { JackpotModule } from './jackpot/jackpot.module';
+import { DiddyModule } from './diddy/diddy.module';
+import { KeeperModule } from './keeper/keeper.module';
 
 @Module({
   imports: [AuthModule, ReferralModule, PointModule,SharedModelModule,
@@ -42,6 +45,9 @@ import { SocketModule } from './socket/socket.module';
     }),
     KuroModule,
     SocketModule,
+    JackpotModule,
+    DiddyModule,
+    KeeperModule,
     // UserModule
   ],
   controllers: [AppController, ReferralController],

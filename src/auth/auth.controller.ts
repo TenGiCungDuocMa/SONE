@@ -316,42 +316,42 @@ export class AuthController {
     }
   }
 
-  @Post("refresh-token/:refreshToken")
-  @ApiOperation({
-    summary: "Refresh JWT token",
-    description: "Refreshes the JWT token using a refresh token.",
-  })
-  @ApiResponse({ status: 200, description: "Token refreshed successfully" })
-  @ApiResponse({ status: 401, description: "Invalid refresh token" })
-  async refreshToken(@Param("refreshToken") refreshToken: string) {
-    try {
-      this.logger.log(`Refreshing token`);
-
-      if (!refreshToken) {
-        throw new BadRequestException("Refresh token is required");
-      }
-
-      const result = await this.authService.refreshToken(refreshToken);
-
-      return new BaseResponse(
-        true,
-        "Token refreshed successfully",
-        result
-      );
-    } catch (error) {
-      this.logger.error(`Token refresh failed: ${error.message}`, {
-        error: error.stack,
-      });
-
-      if (error instanceof BadRequestException) {
-        throw error;
-      }
-
-      throw new HttpException(
-        new BaseResponse(false, error.message || "Failed to refresh token", null),
-        HttpStatus.UNAUTHORIZED
-      );
-    }
-  }
+  // @Post("refresh-token/:refreshToken")
+  // @ApiOperation({
+  //   summary: "Refresh JWT token",
+  //   description: "Refreshes the JWT token using a refresh token.",
+  // })
+  // @ApiResponse({ status: 200, description: "Token refreshed successfully" })
+  // @ApiResponse({ status: 401, description: "Invalid refresh token" })
+  // async refreshToken(@Param("refreshToken") refreshToken: string) {
+  //   try {
+  //     this.logger.log(`Refreshing token`);
+  //
+  //     if (!refreshToken) {
+  //       throw new BadRequestException("Refresh token is required");
+  //     }
+  //
+  //     const result = await this.authService.refreshToken(refreshToken);
+  //
+  //     return new BaseResponse(
+  //       true,
+  //       "Token refreshed successfully",
+  //       result
+  //     );
+  //   } catch (error) {
+  //     this.logger.error(`Token refresh failed: ${error.message}`, {
+  //       error: error.stack,
+  //     });
+  //
+  //     if (error instanceof BadRequestException) {
+  //       throw error;
+  //     }
+  //
+  //     throw new HttpException(
+  //       new BaseResponse(false, error.message || "Failed to refresh token", null),
+  //       HttpStatus.UNAUTHORIZED
+  //     );
+  //   }
+  // }
 
 }
