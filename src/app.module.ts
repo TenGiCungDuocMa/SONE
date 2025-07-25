@@ -15,6 +15,8 @@ import { SharedModelModule } from './shared/shared-model.module';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './services/JwtStrategy';
 // import { UserModule } from './user/user.module';
+import { KuroModule } from './kuro/kuro.module';
+import { SocketModule } from './socket/socket.module';
 
 @Module({
   imports: [AuthModule, ReferralModule, PointModule,SharedModelModule,
@@ -38,6 +40,8 @@ import { JwtStrategy } from './services/JwtStrategy';
       inject: [ConfigService],
       global: true,
     }),
+    KuroModule,
+    SocketModule,
     // UserModule
   ],
   controllers: [AppController, ReferralController],
