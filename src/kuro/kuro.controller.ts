@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -57,6 +58,10 @@ export class KuroController {
   @ApiResponse({ status: 400, description: 'Bad Request' })
   async getAllPools(@Body() body: GetAllPoolsDto) {
     const { page, limit, address } = body;
+
+    if (page < 1 || limit < 1) {
+      return BaseResponsePage.error('Page and limit must be positive numbers');
+    }
     const { data, total } = await this.kuroService.fetchAllPools(
       page,
       limit,

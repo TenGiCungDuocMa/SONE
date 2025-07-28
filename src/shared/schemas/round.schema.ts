@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { IsDate, IsNumber, IsString } from 'class-validator';
+import { IsDate, IsEnum, IsNumber, IsString } from 'class-validator';
 import { Document } from 'mongoose';
 
 @Schema({ timestamps: true })
@@ -28,7 +28,7 @@ export class Round extends Document {
     @IsNumber()
     roundId: number;
 
-    @Prop({ required: true, enum: ["None", "Open", "Drawing", "Drawn", "Cancelled"], default: "None" })
+    @Prop({ required: true, enum: ["None", "Open", "Drawing", "Drawn", "Cancelled"], default: "None", type: String })
     status: RoundStatus;
 
     @Prop()

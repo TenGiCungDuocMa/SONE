@@ -1,6 +1,6 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Cron, CronExpression } from '@nestjs/schedule';
+import { Cron } from '@nestjs/schedule';
 import { KuroABI } from 'src/abi/KuroABI-old';
 import { createPublicClient, createWalletClient, http, formatEther,defineChain } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
@@ -65,7 +65,7 @@ export class DrawWinnerKeeperService implements OnModuleInit {
         const privateKeyRaw = this.configService.get<string>('KEEPER_PRIVATE_KEY');
         const rpcUrl = this.configService.get<string>('RPC_URL');
         const kuryoAddress = this.configService.get<string>('KURO_ADDRESS');
-        const chainId = Number(this.configService.get<string>('CHAIN_ID') || '10143'); // Monad testnet
+        const chainId = Number(this.configService.get<string>('CHAIN_ID') || '10143'); // Somnia testnet
 
         if ( !privateKeyRaw || !kuryoAddress) {
             this.logger.error('Missing environment variables for keeper. Check KEEPER_PRIVATE_KEY and KURO_ADDRESS.');
@@ -73,7 +73,7 @@ export class DrawWinnerKeeperService implements OnModuleInit {
         }
 
         if (!rpcUrl) {
-            throw new Error('MONAD_RPC_URL is not defined');
+            throw new Error('SOMNIA_RPC_URL is not defined');
         }
 
         // Format private key correctly
@@ -84,14 +84,15 @@ export class DrawWinnerKeeperService implements OnModuleInit {
         const transport = http(rpcUrl);
 
         // Define Monad testnet chain
-        const monadTestnet = defineChain({
+        const somniaTestnet = defineChain({
             id: chainId,
-            name: 'Monad Testnet',
-            network: 'monad-testnet',
+            name: 'Somnia Testnet',
+            network: 'somniaTestnet',
+            // network: 'localhost',
             nativeCurrency: {
                 decimals: 18,
-                name: 'Monad',
-                symbol: 'MON',
+                name: 'Somnia',
+                symbol: 'STT',
             },
             rpcUrls: {
                 default: {
@@ -105,13 +106,13 @@ export class DrawWinnerKeeperService implements OnModuleInit {
 
         // Create clients
         this.client = createPublicClient({
-            chain: monadTestnet,
+            chain: somniaTestnet,
             transport,
         });
 
         this.walletClient = createWalletClient({
             account: this.account,
-            chain: monadTestnet,
+            chain: somniaTestnet,
             transport,
         });
 
@@ -123,12 +124,12 @@ export class DrawWinnerKeeperService implements OnModuleInit {
                 address: this.account.address,
             });
 
-            this.logger.log(`[KEEPER_KURO] Keeper wallet balance: ${formatEther(balance)} MON`);
+            this.logger.log(`[KEEPER_KURO] Keeper wallet balance: ${formatEther(balance)} STT`);
 
             // If balance is very low, log a warning
-            if (balance < BigInt(10000000000000000)) { // 0.01 MON
-                this.logger.warn(`[KEEPER_KURO] Low keeper wallet balance! Current balance: ${formatEther(balance)} MON`);
-                this.logger.warn(`[KEEPER_KURO] Please fund the account ${this.account.address} with some MON for gas fees.`);
+            if (balance < BigInt(10000000000000000)) { // 0.01 STT
+                this.logger.warn(`[KEEPER_KURO] Low keeper wallet balance! Current balance: ${formatEther(balance)} STT`);
+                this.logger.warn(`[KEEPER_KURO] Please fund the account ${this.account.address} with some STT for gas fees.`);
             }
         } catch (error) {
             this.logger.error(`[KEEPER_KURO] Error checking keeper wallet balance: ${error.message}`);
@@ -194,7 +195,7 @@ export class DrawWinnerKeeperService implements OnModuleInit {
                     args: [currentRoundId],
                 });
 
-                this.logger.log(`[KEEPER_KURO] Total Deposits: ${formatEther(totalDeposits as bigint)} MON`);
+                this.logger.log(`[KEEPER_KURO] Total Deposits: ${formatEther(totalDeposits as bigint)} STT`);
                 this.logger.log(`[KEEPER_KURO] Winner Address: ${winner}`);
             } catch (error) {
                 this.logger.debug(`[KEEPER_KURO] Could not get additional round info: ${error.message}`);

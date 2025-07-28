@@ -336,12 +336,14 @@ export class KuroService implements OnModuleInit {
 
       const [data, total] = await Promise.all([
         this.kuroModel
-          .find(filter)
+          .find(filter) //Tìm các tài liệu khớp với filter
+          //Lọc thêm các bản ghi có trường status
+          // không nằm trong ($nin) danh sách [KuroStatus.NONE, KuroStatus.OPEN]
           .where({ status: { $nin: [KuroStatus.NONE, KuroStatus.OPEN] } })
-          .skip(skip)
-          .limit(limit)
-          .sort({ createdAt: -1 })
-          .exec(),
+          .skip(skip) //Bỏ qua số bản ghi được tính từ skip (cho phân trang)
+          .limit(limit) //Giới hạn số bản ghi trả về
+          .sort({ createdAt: -1 }) //Sắp xếp kết quả theo trường createdAt theo thứ tự giảm dần
+          .exec(), //Thực thi truy vấn và trả về một Promise
         this.kuroModel.countDocuments(filter),
       ]);
 
@@ -355,6 +357,13 @@ export class KuroService implements OnModuleInit {
     }
   }
 
+  /**
+   * Cập nhật phần thưởng cho winner
+   * @param roundId ID của vòng (round) trong hệ thống, dùng để xác định một vòng cụ thể trong cơ sở dữ liệu.
+   * @param txHash Hash của giao dịch (transaction hash)
+   * @param userAddress Địa chỉ ví (wallet address) của người dùng
+   * @returns
+   */
   async updateWinnerClaimed(
     roundId: string,
     txHash: string,
@@ -364,15 +373,18 @@ export class KuroService implements OnModuleInit {
       // Find round with roundId
       const round = await this.kuroModel
         .findOne({
-          roundId,
+          roundId: roundId,
           kuroContractAddress: this.configService.get<string>('KURO_ADDRESS'),
         })
         .lean();
+
       if (!round) {
         throw new Error(`Round ${roundId} does not exist`);
       }
 
       // Check if round has ended and has a winner
+      // Đây là địa chỉ "zero" trên blockchain (thường là Ethereum), 
+      // biểu thị rằng round chưa có người chiến thắng hoặc chưa kết thúc.
       if (round.winner === '0x0000000000000000000000000000000000000000') {
         throw new Error(
           `Round ${roundId} has not ended or does not have a winner`,
@@ -393,7 +405,7 @@ export class KuroService implements OnModuleInit {
       // Update claimed status
       await this.kuroModel.findOneAndUpdate(
         {
-          roundId,
+          roundId: roundId,
           kuroContractAddress: this.configService.get<string>('KURO_ADDRESS'),
         },
         {
@@ -402,7 +414,7 @@ export class KuroService implements OnModuleInit {
         },
       );
 
-      this.jackpotService.randomJackpot(roundId, round.totalValue, userAddress);
+    await this.jackpotService.randomJackpot(roundId, round.totalValue, userAddress);
 
       return { success: true, message: 'Successfully updated claim status' };
     } catch (error) {

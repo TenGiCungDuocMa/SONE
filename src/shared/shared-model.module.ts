@@ -25,7 +25,7 @@ import { Round, RoundSchema } from "./schemas/round.schema";
       { name: ApiLog.name, schema: ApiLogSchema },
       { name: User.name, schema: UserSchema },
       { name: TokenBlocklist.name, schema: TokenBlocklistSchema },
-      // { name: Event.name, schema: EventSchema },
+      { name: Event.name, schema: EventSchema },
       { name: Round.name, schema: RoundSchema },
       { name: CrawlTracker.name, schema: CrawlTrackerSchema },
       { name: Pool.name, schema: PoolSchema },

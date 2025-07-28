@@ -9,7 +9,7 @@ import {
 import { Logger } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
 import { KuroService } from '../kuro/kuro.service';
-import { DiddyService } from '../diddy/diddy.service';
+// import { DiddyService } from '../diddy/diddy.service';
 import { OnEvent } from '@nestjs/event-emitter';
 import { JackpotService } from 'src/jackpot/jackpot.service';
 
@@ -25,7 +25,7 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
 
     constructor(
         private readonly kuroService: KuroService,
-        private readonly diddyService: DiddyService,
+        // private readonly diddyService: DiddyService,
         private readonly jackpotService: JackpotService
     ) { }
 
@@ -173,11 +173,11 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     private async sendLatestData(client: Socket) {
         try {
             const latestKuroData = await this.kuroService.getLatestKuroData();
-            const latestDiddyData = await this.diddyService.getLatestDiddyData();
+            // const latestDiddyData = await this.diddyService.getLatestDiddyData();
             const latestJackpotData = await this.jackpotService.lastedPoolData();
 
             client.emit('kuroUpdate', latestKuroData);
-            client.emit('diddyUpdate', latestDiddyData);
+            // client.emit('diddyUpdate', latestDiddyData);
             client.emit('jackpotRoundUpdated', latestJackpotData);
         } catch (error) {
             this.logger.error(`Error sending latest data to client: ${error.message}`);
@@ -201,8 +201,8 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
      */
     private async broadcastLatestDiddyData() {
         try {
-            const latestDiddyData = await this.diddyService.getLatestDiddyData();
-            this.server.emit('diddyUpdate', latestDiddyData);
+            // const latestDiddyData = await this.diddyService.getLatestDiddyData();
+            // this.server.emit('diddyUpdate', latestDiddyData);
         } catch (error) {
             this.logger.error(`Error broadcasting Diddy data: ${error.message}`);
         }

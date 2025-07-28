@@ -46,7 +46,7 @@ import { KeeperModule } from './keeper/keeper.module';
     KuroModule,
     SocketModule,
     JackpotModule,
-    DiddyModule,
+    // DiddyModule,
     KeeperModule,
     // UserModule
   ],

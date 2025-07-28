@@ -7,8 +7,8 @@ export class TestService {
   private signer: ethers.Wallet;
 
   constructor() {
-    const rpcUrl = "https://sepolia.infura.io/v3/15c95792af744aaca94fbb66a40dcf6a"; 
-    const privateKey = "ce65d0093544e12317fee156c185d6dcd2f30257d2ee6403d71bd104fc937241";
+    const rpcUrl = "https://sepolia.infura.io/v3/71d6584bf8054c05acff9ed99d9ca4cd"; 
+    const privateKey = "5dce08bd98fc66216ae180225de318148e55f37b1395e39b45ee9b026e86bef6";
 
     if (!rpcUrl || !privateKey) {
       throw new Error('RPC_URL and PRIVATE_KEY must be set in environment variables');

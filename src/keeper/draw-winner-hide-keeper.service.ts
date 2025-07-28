@@ -1,6 +1,6 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Cron, CronExpression } from '@nestjs/schedule';
+import { Cron } from '@nestjs/schedule';
 import { DiddyABI } from 'src/abi/DiddyABI';
 import { createPublicClient, createWalletClient, http, formatEther, defineChain } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
@@ -72,7 +72,7 @@ export class DrawWinnerHideKeeperService implements OnModuleInit {
             return;
         }
         if (!rpcUrl) {
-            throw new Error('MONAD_RPC_URL is not defined');
+            throw new Error('Somnia_RPC_URL is not defined');
         }
         // Format private key correctly
         const privateKey = privateKeyRaw?.startsWith('0x') ? privateKeyRaw : `0x${privateKeyRaw}`;
@@ -82,14 +82,15 @@ export class DrawWinnerHideKeeperService implements OnModuleInit {
         const transport = http(rpcUrl);
 
         // Define Monad testnet chain
-        const monadTestnet = defineChain({
+        const somniaTestnet = defineChain({
             id: chainId,
-            name: 'Monad Testnet',
-            network: 'monad-testnet',
+            name: 'Somnia Testnet',
+            network: 'somniaTestnet',
+            // network: 'localhost',
             nativeCurrency: {
                 decimals: 18,
-                name: 'Monad',
-                symbol: 'MON',
+                name: 'Somnia',
+                symbol: 'STT',
             },
             rpcUrls: {
                 default: {
@@ -103,13 +104,13 @@ export class DrawWinnerHideKeeperService implements OnModuleInit {
 
         // Create clients
         this.client = createPublicClient({
-            chain: monadTestnet,
+            chain: somniaTestnet,
             transport,
         });
 
         this.walletClient = createWalletClient({
             account: this.account,
-            chain: monadTestnet,
+            chain: somniaTestnet,
             transport,
         });
 
@@ -121,12 +122,12 @@ export class DrawWinnerHideKeeperService implements OnModuleInit {
                 address: this.account.address,
             });
 
-            this.logger.log(`Keeper wallet balance: ${formatEther(balance)} MON`);
+            this.logger.log(`Keeper wallet balance: ${formatEther(balance)} STT`);
 
             // If balance is very low, log a warning
-            if (balance < BigInt(10000000000000000)) { // 0.01 MON
-                this.logger.warn(`Low keeper wallet balance! Current balance: ${formatEther(balance)} MON`);
-                this.logger.warn(`Please fund the account ${this.account.address} with some MON for gas fees.`);
+            if (balance < BigInt(10000000000000000)) { // 0.01 STT
+                this.logger.warn(`Low keeper wallet balance! Current balance: ${formatEther(balance)} STT`);
+                this.logger.warn(`Please fund the account ${this.account.address} with some STT for gas fees.`);
             }
         } catch (error) {
             this.logger.error(`Error checking keeper wallet balance: ${error.message}`);
