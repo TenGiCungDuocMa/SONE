@@ -1,7 +1,6 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
-import { KuroABI } from 'src/abi/KuroABI';
 import { createPublicClient, http } from 'viem';
 import { DepositTrackerService } from './deposit-tracker.service';
 import { Model } from 'mongoose';
@@ -9,6 +8,8 @@ import { Kuro, KuroStatus } from 'src/shared/schemas/kuro.schema';
 import { Cron } from '@nestjs/schedule';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { JackpotService } from 'src/jackpot/jackpot.service';
+import { SoneABI } from 'src/abi/SoneABI';
+import { BaseResponsePage } from 'src/response/BaseResponsePage';
 
 @Injectable()
 export class KuroService implements OnModuleInit {
@@ -87,7 +88,7 @@ export class KuroService implements OnModuleInit {
       const previousRound = await this.kuroModel
         .findOne({
           roundId: previousRoundId,
-          kuroContractAddress: this.configService.get<string>('KURO_ADDRESS'),
+          kuroContractAddress: this.configService.get<string>('SONE_ADDRESS'),
         })
         .lean();
 
@@ -145,7 +146,7 @@ export class KuroService implements OnModuleInit {
       const previousRound = await this.kuroModel
         .findOne({
           roundId: previousRoundId,
-          kuroContractAddress: this.configService.get<string>('KURO_ADDRESS'),
+          kuroContractAddress: this.configService.get<string>('SONE_ADDRESS'),
         })
         .lean();
 
@@ -165,7 +166,7 @@ export class KuroService implements OnModuleInit {
       const kuroData = await this.kuroModel
         .findOne({
           roundId: roundId,
-          kuroContractAddress: this.configService.get<string>('KURO_ADDRESS'),
+          kuroContractAddress: this.configService.get<string>('SONE_ADDRESS'),
         })
         .lean();
 
@@ -197,7 +198,7 @@ export class KuroService implements OnModuleInit {
         participants: kuroData.participants || [],
         isShowingWinner: isShowingWinner,
         currentRoundId: currentRoundId.toString(),
-        kuroContractAddress: this.configService.get<string>('KURO_ADDRESS'),
+        kuroContractAddress: this.configService.get<string>('SONE_ADDRESS'),
       };
     } catch (error) {
       this.logger.error(`Error fetching latest Kuro data: ${error.message}`);
@@ -210,8 +211,8 @@ export class KuroService implements OnModuleInit {
    */
   private async getCurrentRoundId(): Promise<number> {
     const currentRoundId = await this.client.readContract({
-      address: this.configService.get<string>('KURO_ADDRESS'),
-      abi: KuroABI,
+      address: this.configService.get<string>('SONE_ADDRESS'),
+      abi: SoneABI,
       functionName: 'currentRoundId',
     });
 
@@ -225,7 +226,7 @@ export class KuroService implements OnModuleInit {
       const previousRound = await this.kuroModel
         .findOne({
           roundId: previousRoundId,
-          kuroContractAddress: this.configService.get<string>('KURO_ADDRESS'),
+          kuroContractAddress: this.configService.get<string>('SONE_ADDRESS'),
         })
         .lean();
       let roundId = -1;
@@ -245,8 +246,8 @@ export class KuroService implements OnModuleInit {
       this.logger.log(`Current round ID Processed: ${roundId}`);
 
       const currentPool = await this.client.readContract({
-        address: this.configService.get<string>('KURO_ADDRESS'),
-        abi: KuroABI,
+        address: this.configService.get<string>('SONE_ADDRESS'),
+        abi: SoneABI,
         functionName: 'getRoundInfo',
         args: [roundId],
       });
@@ -257,8 +258,10 @@ export class KuroService implements OnModuleInit {
       const drawnAt = Number(currentPool[3]);
       const numberOfParticipants = Number(currentPool[4]);
       const winner = currentPool[5] as string;
-      const totalValue = currentPool[6];
-      const totalEntries = currentPool[7];
+      const totalValue = Number(currentPool[6]);
+      const totalEntries = Number(currentPool[7]);
+      const protocolFeeOwed = Number(currentPool[8]);
+      const prizesClaimed = Boolean(currentPool[9]);
       ``;
 
       const participants = await this.depositTrackerService.trackDeposit(
@@ -269,7 +272,7 @@ export class KuroService implements OnModuleInit {
       await this.kuroModel.findOneAndUpdate(
         {
           roundId: roundId,
-          kuroContractAddress: this.configService.get<string>('KURO_ADDRESS'),
+          kuroContractAddress: this.configService.get<string>('SONE_ADDRESS'),
         },
         {
           status,
@@ -281,7 +284,9 @@ export class KuroService implements OnModuleInit {
           totalValue,
           totalEntries,
           participants,
-          kuroContractAddress: this.configService.get<string>('KURO_ADDRESS'),
+          protocolFeeOwed,
+          prizesClaimed,
+          kuroContractAddress: this.configService.get<string>('SONE_ADDRESS'),
         },
         { upsert: true },
       );
@@ -302,7 +307,7 @@ export class KuroService implements OnModuleInit {
         await this.kuroModel.findOneAndUpdate(
           {
             roundId: roundId,
-            kuroContractAddress: this.configService.get<string>('KURO_ADDRESS'),
+            kuroContractAddress: this.configService.get<string>('SONE_ADDRESS'),
           },
           {
             winner: participants[0].address,
@@ -311,7 +316,18 @@ export class KuroService implements OnModuleInit {
         );
       }
 
-      return true;
+      return {
+        status: status,
+        startTime: startTime,
+        endTime: endTime,
+        drawnAt: drawnAt,
+        numberOfParticipants: numberOfParticipants,
+        winner: winner,
+        totalValue: totalValue,
+        totalEntries: totalEntries,
+        protocolFeeOwed: protocolFeeOwed,
+        prizesClaimed: prizesClaimed,
+      };
     } catch (error) {
       this.logger.error(error);
       throw error;
@@ -322,7 +338,7 @@ export class KuroService implements OnModuleInit {
     const kuro = await this.kuroModel
       .findOne({
         roundId: roundId,
-        kuroContractAddress: this.configService.get<string>('KURO_ADDRESS'),
+        kuroContractAddress: this.configService.get<string>('SONE_ADDRESS'),
       })
       .lean();
     return kuro;
@@ -374,7 +390,7 @@ export class KuroService implements OnModuleInit {
       const round = await this.kuroModel
         .findOne({
           roundId: roundId,
-          kuroContractAddress: this.configService.get<string>('KURO_ADDRESS'),
+          kuroContractAddress: this.configService.get<string>('SONE_ADDRESS'),
         })
         .lean();
 
@@ -383,7 +399,7 @@ export class KuroService implements OnModuleInit {
       }
 
       // Check if round has ended and has a winner
-      // Đây là địa chỉ "zero" trên blockchain (thường là Ethereum), 
+      // Đây là địa chỉ "zero" trên blockchain (thường là Ethereum),
       // biểu thị rằng round chưa có người chiến thắng hoặc chưa kết thúc.
       if (round.winner === '0x0000000000000000000000000000000000000000') {
         throw new Error(
@@ -406,7 +422,7 @@ export class KuroService implements OnModuleInit {
       await this.kuroModel.findOneAndUpdate(
         {
           roundId: roundId,
-          kuroContractAddress: this.configService.get<string>('KURO_ADDRESS'),
+          kuroContractAddress: this.configService.get<string>('SONE_ADDRESS'),
         },
         {
           winnerClaimed: true,
@@ -414,7 +430,11 @@ export class KuroService implements OnModuleInit {
         },
       );
 
-    await this.jackpotService.randomJackpot(roundId, round.totalValue, userAddress);
+      await this.jackpotService.randomJackpot(
+        roundId,
+        round.totalValue,
+        userAddress,
+      );
 
       return { success: true, message: 'Successfully updated claim status' };
     } catch (error) {

@@ -9,7 +9,6 @@ import {
 import { Logger } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
 import { KuroService } from '../kuro/kuro.service';
-// import { DiddyService } from '../diddy/diddy.service';
 import { OnEvent } from '@nestjs/event-emitter';
 import { JackpotService } from 'src/jackpot/jackpot.service';
 
@@ -25,22 +24,17 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
 
     constructor(
         private readonly kuroService: KuroService,
-        // private readonly diddyService: DiddyService,
         private readonly jackpotService: JackpotService
     ) { }
 
     afterInit(server: Server) {
         this.logger.log('WebSocket Gateway đã được khởi tạo');
-
         this.setupKuroServiceListeners();
-        this.setupDiddyServiceListeners();
-        
     }
 
     handleConnection(client: Socket) {
         this.logger.log(`Client connected: ${client.id}`);
         this.connectedClients.set(client.id, client);
-
         this.sendLatestData(client);
     }
 
@@ -78,48 +72,6 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
         });
     }
 
-    /**
-     * Lắng nghe sự kiện người thắng được công bố từ Diddy
-     */
-    @OnEvent('diddy.winner_announced')
-    handleDiddyWinnerAnnounced(payload: any) {
-        this.logger.log(`Diddy winner announced event received for round ${payload.roundId}: ${JSON.stringify(payload)}`);
-        this.server.emit('diddyWinnerAnnounced', {
-            event: 'diddyWinnerAnnounced',
-            data: payload,
-            showDuration: 15000,
-            timestamp: Date.now()
-        });
-    }
-
-    /**
-     * Lắng nghe sự kiện vòng mới từ Diddy
-     */
-    @OnEvent('diddy.new_round')
-    handleDiddyNewRound(payload: any) {
-        this.logger.log(`Diddy new round event received: ${payload.roundId}`);
-
-        this.server.emit('diddyNewRound', {
-            event: 'diddyNewRound',
-            data: payload,
-            timestamp: Date.now()
-        });
-    }
-
-    /**
-     * Lắng nghe sự kiện vòng bị hủy từ Diddy
-     */
-    @OnEvent('diddy.round_cancelled')
-    handleDiddyRoundCancelled(payload: any) {
-        this.logger.log(`Diddy round cancelled event received: ${payload.roundId}`);
-
-        this.server.emit('diddyRoundCancelled', {
-            event: 'diddyRoundCancelled',
-            data: payload,
-            timestamp: Date.now()
-        });
-    }
-
     @OnEvent('jackpot_round_updated')
     handleJackpotRoundUpdated(payload: any) {
         this.logger.log(`Jackpot round updated event received: ${JSON.stringify(payload)}`);
@@ -146,38 +98,14 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     }
 
     /**
-     * Thiết lập lắng nghe sự kiện từ DiddyService
-     */
-    private setupDiddyServiceListeners() {
-        setInterval(async () => {
-            try {
-                this.broadcastLatestDiddyData();
-            } catch (error) {
-                this.logger.error(`Error broadcasting Diddy data: ${error.message}`);
-            }
-        }, 5000);
-    }
-
-    private setUpJackpotListeners() {
-            try {
-                const jackpotData = this.jackpotService.lastedPoolData();
-                this.server.emit('jackpotRoundUpdated', jackpotData);
-            } catch (error) {
-                this.logger.error(`Error broadcasting Jackpot data: ${error.message}`);
-            }
-    }
-
-    /**
      * Gửi dữ liệu mới nhất cho client khi họ kết nối
      */
     private async sendLatestData(client: Socket) {
         try {
             const latestKuroData = await this.kuroService.getLatestKuroData();
-            // const latestDiddyData = await this.diddyService.getLatestDiddyData();
             const latestJackpotData = await this.jackpotService.lastedPoolData();
 
             client.emit('kuroUpdate', latestKuroData);
-            // client.emit('diddyUpdate', latestDiddyData);
             client.emit('jackpotRoundUpdated', latestJackpotData);
         } catch (error) {
             this.logger.error(`Error sending latest data to client: ${error.message}`);
@@ -196,29 +124,10 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
         }
     }
 
-    /**
-     * Gửi dữ liệu Diddy mới nhất đến tất cả clients đang kết nối
-     */
-    private async broadcastLatestDiddyData() {
-        try {
-            // const latestDiddyData = await this.diddyService.getLatestDiddyData();
-            // this.server.emit('diddyUpdate', latestDiddyData);
-        } catch (error) {
-            this.logger.error(`Error broadcasting Diddy data: ${error.message}`);
-        }
-    }
-
     @SubscribeMessage('subscribeToRound')
     handleSubscribeToRound(client: Socket, roundId: number) {
         this.logger.log(`Client ${client.id} subscribed to round ${roundId}`);
         client.join(`round-${roundId}`);
         return { event: 'subscribeToRound', data: { success: true, roundId } };
-    }
-
-    @SubscribeMessage('subscribeToDiddyRound')
-    handleSubscribeToDiddyRound(client: Socket, roundId: number) {
-        this.logger.log(`Client ${client.id} subscribed to Diddy round ${roundId}`);
-        client.join(`diddy-round-${roundId}`);
-        return { event: 'subscribeToDiddyRound', data: { success: true, roundId } };
     }
 } 

@@ -18,15 +18,4 @@ export class VerifySignatureDto {
     @IsNotEmpty()
     signature: string;
 
-    @ApiProperty({
-        description: 'Referral code (optional)',
-        example: 'abc123-xyz789',
-        required: false
-    })
-    @IsOptional()
-    @IsString()
-    @Matches(/^[a-zA-Z0-9-_]{6,20}$/, {
-        message: 'Invalid referral code format. Must be 6-20 characters long and contain only letters, numbers, hyphens, and underscores.'
-    })
-    referralCode?: string;
 } 

@@ -37,25 +37,6 @@ export class PointService {
         return point;
     }
 
-    async addReferralPoints(
-        userId: string | Types.ObjectId,
-        referralId: string,
-        isReferrer: boolean
-    ): Promise<Point> {
-        const amount = isReferrer ? 100 : 50; // Người giới thiệu 100 điểm, người được giới thiệu 50 điểm
-        const description = isReferrer
-            ? 'Điểm thưởng giới thiệu thành công'
-            : 'Điểm thưởng sử dụng mã giới thiệu';
-
-        return this.addPoints(
-            userId,
-            amount,
-            PointType.REFERRAL,
-            description,
-            { referralId, isReferrer }
-        );
-    }
-
     async getUserPoints(userId: string): Promise<{
         total: number;
         history: Point[];
@@ -81,16 +62,5 @@ export class PointService {
             userId: new Types.ObjectId(userId),
             type
         }).sort({ createdAt: -1 }).exec();
-    }
-
-    async getPointsByReferralIds(
-        userId: string | Types.ObjectId,
-        referralIds: string[]
-    ): Promise<Point[]> {
-        return this.pointModel.find({
-            userId: new Types.ObjectId(userId),
-            type: PointType.REFERRAL,
-            'metadata.referralId': { $in: referralIds }
-        }).exec();
     }
 } 

@@ -2,7 +2,7 @@ import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
-import { KuroABI } from "src/abi/KuroABI";
+import { SoneABI } from "src/abi/SoneABI";
 import { Kuro } from "src/shared/schemas/kuro.schema";
 import { http } from "viem";
 import { createPublicClient } from "viem";
@@ -60,7 +60,7 @@ export class DepositTrackerService {
         this.client = createPublicClient({
             chain: {
                 id: chainId,
-                name: 'Monad Testnet',
+                name: 'Somnia Testnet',
                 rpcUrls: {
                     default: {
                         http: [rpcUrl],
@@ -68,8 +68,8 @@ export class DepositTrackerService {
                     }
                 },
                 nativeCurrency: {
-                    name: 'Monad',
-                    symbol: 'MON',
+                    name: 'Somnia',
+                    symbol: 'STT',
                     decimals: 18
                 }
             },
@@ -79,8 +79,8 @@ export class DepositTrackerService {
 
     async trackDeposit(roundId: number) {
         const currentRoundData = await this.client.readContract({
-            address: this.configService.get<string>('KURO_ADDRESS'),
-            abi: KuroABI,
+            address: this.configService.get<string>('SONE_ADDRESS'),
+            abi: SoneABI,
             functionName: 'getUserDepositsInRound',
             args: [roundId],
         });

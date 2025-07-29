@@ -1,113 +1,128 @@
 import {
   BadRequestException,
   Body,
-  Controller, Get,
+  Controller,
+  Get,
   HttpException,
   HttpStatus,
   Logger,
   Param,
   Post,
-  Req, UseGuards,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
 import { BaseResponse } from '../response/BaseResponse';
 import { VerifySignatureDto } from './dto/VerifySignature';
 import { JwtAuthGuard } from '../services/JwtAuthGuard';
 import { TestService } from './test.service';
-@ApiTags("Authentication")
+@ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
   private readonly logger = new Logger(AuthController.name);
-  constructor(private readonly authService: AuthService, private readonly testService: TestService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly testService: TestService,
+  ) {}
 
-  @Get("sign-message/:message")
+  @Get('sign-message/:message')
   @ApiOperation({
-    summary: "Get sign message",
-    description: "Returns a message for the user to sign using their wallet.",
+    summary: 'Get sign message',
+    description: 'Returns a message for the user to sign using their wallet.',
   })
-  @ApiResponse({ status: 200, description: "Message retrieved successfully" })
-  @ApiResponse({ status: 400, description: "Invalid address format" })
-  async getSignMessage(@Param("message") message: string) {
+  @ApiResponse({ status: 200, description: 'Message retrieved successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid address format' })
+  async getSignMessage(@Param('message') message: string) {
     this.logger.log(`Requesting sign message for: ${message}`);
-    if (!message || typeof message !== 'string') 
-      throw new BadRequestException("Invalid message format");
+    if (!message || typeof message !== 'string')
+      throw new BadRequestException('Invalid message format');
     return this.testService.getSignMessage(message);
   }
-  @Post("request-signature/:address")
+  @Post('request-signature/:address')
   @ApiOperation({
-    summary: "Request a signature message",
-    description: "Generates a message for the user to sign using their wallet.",
+    summary: 'Request a signature message',
+    description: 'Generates a message for the user to sign using their wallet.',
   })
-  @ApiResponse({ status: 200, description: "Message generated successfully" })
-  @ApiResponse({ status: 400, description: "Invalid address format" })
-  @ApiResponse({ status: 429, description: "Too many requests" })
-  async requestSignature(@Param("address") address: string) {
+  @ApiResponse({ status: 200, description: 'Message generated successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid address format' })
+  @ApiResponse({ status: 429, description: 'Too many requests' })
+  async requestSignature(@Param('address') address: string) {
     try {
       this.logger.log(`Signature request received for address: ${address}`);
 
       if (!address || !/^0x[a-fA-F0-9]{40}$/.test(address)) {
-        throw new BadRequestException("Invalid Ethereum address format");
+        throw new BadRequestException('Invalid Ethereum address format');
       }
 
       const res = await this.authService.requestMessage(address);
 
       this.logger.log(`Signature message generated for address: ${address}`);
-      return BaseResponse.success(res, "Signature message generated successfully.");
+      return BaseResponse.success(
+        res,
+        'Signature message generated successfully.',
+      );
     } catch (error) {
-      this.logger.error(`Error generating signature message: ${error.message}`, {
-        address,
-        error: error.stack,
-      });
+      this.logger.error(
+        `Error generating signature message: ${error.message}`,
+        {
+          address,
+          error: error.stack,
+        },
+      );
 
       if (error instanceof BadRequestException) {
         throw error;
       }
 
       throw new HttpException(
-        new BaseResponse(false, "Failed to generate signature message", null),
-        HttpStatus.INTERNAL_SERVER_ERROR
+        new BaseResponse(false, 'Failed to generate signature message', null),
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
-  
-  @Post("verify-signature")
+
+  @Post('verify-signature')
   // @UseGuards(ThrottlerGuard)
   @ApiOperation({
-    summary: "Verify the signature and generate JWT",
-    description: "Verifies the user's signature and generates a JWT token if verification is successful.",
+    summary: 'Verify the signature and generate JWT',
+    description:
+      "Verifies the user's signature and generates a JWT token if verification is successful.",
   })
-  @ApiResponse({ status: 200, description: "Signature verified successfully" })
-  @ApiResponse({ status: 400, description: "Invalid input data" })
-  @ApiResponse({ status: 429, description: "Too many requests" })
-  @ApiResponse({ status: 500, description: "Internal server error" })
+  @ApiResponse({ status: 200, description: 'Signature verified successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid input data' })
+  @ApiResponse({ status: 429, description: 'Too many requests' })
+  @ApiResponse({ status: 500, description: 'Internal server error' })
   async verifySignature(
     @Req() req: any,
-    @Body() verifySignatureDto: VerifySignatureDto
+    @Body() verifySignatureDto: VerifySignatureDto,
   ) {
     try {
-      const { address, signature, referralCode } = verifySignatureDto;
-
-      this.logger.log(`Verifying signature for address: ${address}${referralCode ? ` with referral: ${referralCode}` : ''}`);
-
+      const { address, signature } = verifySignatureDto;
       const res = await this.authService.verifySignature(
         req,
         address,
         signature,
-        referralCode
       );
 
-      this.logger.log(`Signature verified successfully for address: ${address}`);
+      this.logger.log(
+        `Signature verified successfully for address: ${address}`,
+      );
 
       return new BaseResponse(
         true,
-        "Signature verified and JWT token generated successfully.",
-        res
+        'Signature verified and JWT token generated successfully.',
+        res,
       );
     } catch (error) {
       this.logger.error(`Signature verification failed: ${error.message}`, {
         address: verifySignatureDto.address,
-        referralCode: verifySignatureDto.referralCode,
         error: error.stack,
       });
 
@@ -116,34 +131,38 @@ export class AuthController {
       }
 
       throw new HttpException(
-        new BaseResponse(false, error.message || "Failed to verify signature", null),
-        HttpStatus.INTERNAL_SERVER_ERROR
+        new BaseResponse(
+          false,
+          error.message || 'Failed to verify signature',
+          null,
+        ),
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
   @UseGuards(JwtAuthGuard)
-  @Post("logout")
+  @Post('logout')
   @ApiBearerAuth()
   @ApiOperation({
-    summary: "Logout",
-    description: "Logs out the user by invalidating the provided JWT token.",
+    summary: 'Logout',
+    description: 'Logs out the user by invalidating the provided JWT token.',
   })
-  @ApiResponse({ status: 200, description: "Logged out successfully" })
-  @ApiUnauthorizedResponse({ description: "Unauthorized" })
+  @ApiResponse({ status: 200, description: 'Logged out successfully' })
+  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   async logout(@Req() req: any) {
     try {
       const authHeader = req.headers.authorization;
 
       if (!authHeader) {
-        throw new BadRequestException("Authorization header is missing");
+        throw new BadRequestException('Authorization header is missing');
       }
 
-      const token = authHeader.split(" ")[1];
+      const token = authHeader.split(' ')[1];
       const res = await this.authService.logout(token);
 
       this.logger.log(`User logged out successfully: ${req.user.address}`);
 
-      return new BaseResponse(true, "Token successfully invalidated", res);
+      return new BaseResponse(true, 'Token successfully invalidated', res);
     } catch (error) {
       this.logger.error(`Logout failed: ${error.message}`, {
         userId: req.user?.address,
@@ -155,32 +174,37 @@ export class AuthController {
       }
 
       throw new HttpException(
-        new BaseResponse(false, "Failed to logout", null),
-        HttpStatus.INTERNAL_SERVER_ERROR
+        new BaseResponse(false, 'Failed to logout', null),
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get("me")
+  @Get('me')
   @ApiBearerAuth()
   @ApiOperation({
-    summary: "Get current user information",
-    description: "Retrieves the current user's information based on the JWT token.",
+    summary: 'Get current user information',
+    description:
+      "Retrieves the current user's information based on the JWT token.",
   })
-  @ApiResponse({ status: 200, description: "User information retrieved successfully" })
-  @ApiResponse({ status: 401, description: "Unauthorized" })
+  @ApiResponse({
+    status: 200,
+    description: 'User information retrieved successfully',
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
   async getCurrentUser(@Req() req: any) {
     try {
       const { address } = req.user;
       this.logger.log(`Fetching user information for address: ${address}`);
-
-      const userData = await this.authService.getUserByAddress(address);
+      const auth = req.headers.authorization;
+      const token = auth.split(' ')[1];
+      const userData = await this.authService.getUserByAddress(address, token);
 
       return new BaseResponse(
         true,
-        "User information retrieved successfully.",
-        userData
+        'User information retrieved successfully.',
+        userData,
       );
     } catch (error) {
       this.logger.error(`Failed to get user information: ${error.message}`, {
@@ -190,23 +214,27 @@ export class AuthController {
 
       throw new HttpException(
         new BaseResponse(false, error.message, null),
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
 
-  @Post("check-token/:token")
+  @Post('check-token/:token')
   @ApiOperation({
-    summary: "Check if token is valid",
-    description: "Checks if the provided token is valid and not in the blocklist.",
+    summary: 'Check if token is valid',
+    description:
+      'Checks if the provided token is valid and not in the blocklist.',
   })
-  @ApiResponse({ status: 200, description: "Token status checked successfully" })
-  async checkToken(@Param("token") token: string) {
+  @ApiResponse({
+    status: 200,
+    description: 'Token status checked successfully',
+  })
+  async checkToken(@Param('token') token: string) {
     try {
       this.logger.log(`Checking token validity`);
 
       if (!token) {
-        throw new BadRequestException("Token is required");
+        throw new BadRequestException('Token is required');
       }
 
       // Kiểm tra token trong blocklist
@@ -221,14 +249,10 @@ export class AuthController {
         isValid = false;
       }
 
-      return new BaseResponse(
-        true,
-        "Token status checked successfully",
-        {
-          isValid,
-          isBlocked,
-        }
-      );
+      return new BaseResponse(true, 'Token status checked successfully', {
+        isValid,
+        isBlocked,
+      });
     } catch (error) {
       this.logger.error(`Token check failed: ${error.message}`, {
         error: error.stack,
@@ -239,82 +263,82 @@ export class AuthController {
       }
 
       throw new HttpException(
-        new BaseResponse(false, error.message || "Failed to check token", null),
-        HttpStatus.INTERNAL_SERVER_ERROR
+        new BaseResponse(false, error.message || 'Failed to check token', null),
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
 
-  @Get("debug-token")
-  @ApiOperation({
-    summary: "Debug token",
-    description: "Debug the token in the Authorization header.",
-  })
-  @ApiResponse({ status: 200, description: "Token debug information" })
-  async debugToken(@Req() req) {
-    try {
-      const authHeader = req.headers.authorization;
+  // @Get("debug-token")
+  // @ApiOperation({
+  //   summary: "Debug token",
+  //   description: "Debug the token in the Authorization header.",
+  // })
+  // @ApiResponse({ status: 200, description: "Token debug information" })
+  // async debugToken(@Req() req) {
+  //   try {
+  //     const authHeader = req.headers.authorization;
 
-      if (!authHeader) {
-        return new BaseResponse(
-          true,
-          "No token provided",
-          { hasToken: false }
-        );
-      }
+  //     if (!authHeader) {
+  //       return new BaseResponse(
+  //         true,
+  //         "No token provided",
+  //         { hasToken: false }
+  //       );
+  //     }
 
-      const parts = authHeader.split(" ");
-      if (parts.length !== 2 || parts[0] !== 'Bearer') {
-        return new BaseResponse(
-          true,
-          "Invalid token format",
-          {
-            hasToken: true,
-            isValidFormat: false,
-            header: authHeader
-          }
-        );
-      }
+  //     const parts = authHeader.split(" ");
+  //     if (parts.length !== 2 || parts[0] !== 'Bearer') {
+  //       return new BaseResponse(
+  //         true,
+  //         "Invalid token format",
+  //         {
+  //           hasToken: true,
+  //           isValidFormat: false,
+  //           header: authHeader
+  //         }
+  //       );
+  //     }
 
-      const token = parts[1];
+  //     const token = parts[1];
 
-      // Kiểm tra token có trong blocklist không
-      const isBlocked = await this.authService.isTokenBlocked(token);
+  //     // Kiểm tra token có trong blocklist không
+  //     const isBlocked = await this.authService.isTokenBlocked(token);
 
-      // Kiểm tra token có hợp lệ không
-      let decoded = null;
-      let isValid = false;
-      try {
-        decoded = this.authService.verifyToken(token);
-        isValid = !!decoded;
-      } catch (error) {
-        isValid = false;
-      }
+  //     // Kiểm tra token có hợp lệ không
+  //     let decoded = null;
+  //     let isValid = false;
+  //     try {
+  //       decoded = this.authService.verifyToken(token);
+  //       isValid = !!decoded;
+  //     } catch (error) {
+  //       isValid = false;
+  //     }
 
-      return new BaseResponse(
-        true,
-        "Token debug information",
-        {
-          hasToken: true,
-          isValidFormat: true,
-          isValid,
-          isBlocked,
-          decoded,
-          tokenPreview: token.substring(0, 20) + '...'
-        }
-      );
-    } catch (error) {
-      this.logger.error(`Token debug failed: ${error.message}`, {
-        error: error.stack,
-      });
+  //     return new BaseResponse(
+  //       true,
+  //       "Token debug information",
+  //       {
+  //         hasToken: true,
+  //         isValidFormat: true,
+  //         isValid,
+  //         isBlocked,
+  //         decoded,
+  //         tokenPreview: token.substring(0, 20) + '...'
+  //       }
+  //     );
+  //   } catch (error) {
+  //     this.logger.error(`Token debug failed: ${error.message}`, {
+  //       error: error.stack,
+  //     });
 
-      return new BaseResponse(
-        false,
-        "Error debugging token",
-        { error: error.message }
-      );
-    }
-  }
+  //     return new BaseResponse(
+  //       false,
+  //       "Error debugging token",
+  //       { error: error.message }
+  //     );
+  //   }
+  // }
 
   // @Post("refresh-token/:refreshToken")
   // @ApiOperation({
@@ -353,5 +377,4 @@ export class AuthController {
   //     );
   //   }
   // }
-
 }

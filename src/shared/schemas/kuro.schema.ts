@@ -28,7 +28,7 @@ export class Kuro extends Document {
     @IsNumber()
     drawnAt: number
 
-    @Prop({ type: String, default: '0' })
+    @Prop({ type: Number, default: '0' })
     @IsNumber()
     numberOfParticipants: number
 
@@ -66,6 +66,12 @@ export class Kuro extends Document {
     @Prop({ type: Number, default: 0 })
     @IsNumber()
     version: number
+
+    @Prop({ type: Number})
+    protocolFeeOwed: number
+
+    @Prop({ type: Boolean, default: false })
+    prizesClaimed: boolean
 }
 
 export const KuroSchema = SchemaFactory.createForClass(Kuro);

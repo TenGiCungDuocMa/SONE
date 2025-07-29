@@ -37,26 +37,6 @@ export class User {
   @IsNumber()
   totalPoints: number;
 
-  @Prop({
-    type: String,
-    unique: true,
-    sparse: true,
-    default: function () {
-      if (this.address) {
-        return `${this.address.slice(2, 8)}-${Date.now().toString(36)}`;
-      }
-      return undefined;
-    }
-  })
-  referralCode: string;
-
-  @Prop({ default: 0 })
-  @IsNumber()
-  referralCount: number;
-
-  @Prop({ type: String, default: "" })
-  referredBy?: string;
-
   @Prop()
   @IsDate()
   createdAt: Date;
