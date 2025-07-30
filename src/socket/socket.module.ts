@@ -1,10 +1,9 @@
 import { Module } from '@nestjs/common';
 import { SocketGateway } from './socket.gateway';
 import { KuroModule } from '../kuro/kuro.module';
-import { JackpotModule } from 'src/jackpot/jackpot.module';
 
 @Module({
-    imports: [KuroModule, JackpotModule],
+    imports: [KuroModule,],
     providers: [SocketGateway],
     exports: [SocketGateway],
 })

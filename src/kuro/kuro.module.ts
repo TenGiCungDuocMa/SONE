@@ -4,10 +4,9 @@ import { KuroService } from './kuro.service';
 import { SharedModelModule } from 'src/shared/shared-model.module';
 import { DepositTrackerService } from './deposit-tracker.service';
 import { KuroSeedService } from './kuro.seed';
-import { JackpotModule } from 'src/jackpot/jackpot.module';
 
 @Module({
-  imports: [SharedModelModule, JackpotModule],
+  imports: [SharedModelModule],
   controllers: [KuroController],
   providers: [KuroService, DepositTrackerService, KuroSeedService],
   exports: [KuroService, DepositTrackerService, KuroSeedService]

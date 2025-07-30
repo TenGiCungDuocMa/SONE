@@ -51,7 +51,7 @@ export class KuroController {
     return BaseResponse.success(res);
   }
 
-  @Get('get-all-pools')
+  @Post('get-all-pools')
   @ApiOperation({ summary: 'Get all pools' })
   @ApiResponse({ status: 200, description: 'All pools' })
   @ApiResponse({ status: 400, description: 'Bad Request' })
