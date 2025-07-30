@@ -7,9 +7,7 @@ import { Model } from 'mongoose';
 import { Kuro, KuroStatus } from 'src/shared/schemas/kuro.schema';
 import { Cron } from '@nestjs/schedule';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { JackpotService } from 'src/jackpot/jackpot.service';
 import { SoneABI } from 'src/abi/SoneABI';
-import { BaseResponsePage } from 'src/response/BaseResponsePage';
 
 @Injectable()
 export class KuroService implements OnModuleInit {
@@ -23,7 +21,6 @@ export class KuroService implements OnModuleInit {
     private depositTrackerService: DepositTrackerService,
     @InjectModel(Kuro.name) private kuroModel: Model<Kuro>,
     private eventEmitter: EventEmitter2,
-    private jackpotService: JackpotService,
   ) {
     const rpcUrl = <string>this.configService.get<string>('RPC_URL');
     const chainId = Number(this.configService.get('CHAIN_ID'));
@@ -141,7 +138,6 @@ export class KuroService implements OnModuleInit {
   async getLatestKuroData() {
     try {
       const currentRoundId = await this.getCurrentRoundId();
-
       const previousRoundId = currentRoundId - 1;
       const previousRound = await this.kuroModel
         .findOne({
@@ -428,12 +424,6 @@ export class KuroService implements OnModuleInit {
           winnerClaimed: true,
           txClaimed: txHash,
         },
-      );
-
-      await this.jackpotService.randomJackpot(
-        roundId,
-        round.totalValue,
-        userAddress,
       );
 
       return { success: true, message: 'Successfully updated claim status' };

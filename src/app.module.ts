@@ -13,11 +13,12 @@ import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './services/JwtStrategy';
 import { KuroModule } from './kuro/kuro.module';
 import { SocketModule } from './socket/socket.module';
-import { JackpotModule } from './jackpot/jackpot.module';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({
   imports: [AuthModule, PointModule,SharedModelModule,
     ConfigModule.forRoot({isGlobal: true, envFilePath: ['.env']}),
+    EventEmitterModule.forRoot(),
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
@@ -39,7 +40,6 @@ import { JackpotModule } from './jackpot/jackpot.module';
     }),
     KuroModule,
     SocketModule,
-    JackpotModule,
   ],
   controllers: [AppController],
   providers: [AppService, PointService, JwtStrategy],

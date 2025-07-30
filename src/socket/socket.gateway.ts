@@ -10,7 +10,6 @@ import { Logger } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
 import { KuroService } from '../kuro/kuro.service';
 import { OnEvent } from '@nestjs/event-emitter';
-import { JackpotService } from 'src/jackpot/jackpot.service';
 
 @WebSocketGateway({
     cors: {
@@ -24,7 +23,6 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
 
     constructor(
         private readonly kuroService: KuroService,
-        private readonly jackpotService: JackpotService
     ) { }
 
     afterInit(server: Server) {
@@ -72,18 +70,6 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
         });
     }
 
-    @OnEvent('jackpot_round_updated')
-    handleJackpotRoundUpdated(payload: any) {
-        this.logger.log(`Jackpot round updated event received: ${JSON.stringify(payload)}`);
-        this.server.emit('jackpotRoundUpdated', payload);
-    }
-
-    @OnEvent('jackpot_announced_winner')
-    handleJackpotAnnouncedWinner(payload: any) {
-        this.logger.log(`Jackpot announced winner event received: ${JSON.stringify(payload)}`);
-        this.server.emit('jackpotWinnerAnnounced', payload);
-    }
-
     /**
      * Thiết lập lắng nghe sự kiện từ KuroService
      */
@@ -103,10 +89,7 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     private async sendLatestData(client: Socket) {
         try {
             const latestKuroData = await this.kuroService.getLatestKuroData();
-            const latestJackpotData = await this.jackpotService.lastedPoolData();
-
             client.emit('kuroUpdate', latestKuroData);
-            client.emit('jackpotRoundUpdated', latestJackpotData);
         } catch (error) {
             this.logger.error(`Error sending latest data to client: ${error.message}`);
         }

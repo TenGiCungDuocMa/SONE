@@ -21,7 +21,6 @@ export class Player extends Document {
 }
 
 export type RoundStatus = "None" | "Open" | "Drawing" | "Drawn" | "Cancelled";
-
 @Schema({ timestamps: true })
 export class Round extends Document {
     @Prop({ required: true, unique: true })

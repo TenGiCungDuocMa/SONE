@@ -10,7 +10,6 @@ import { Pool, PoolSchema } from "./schemas/pool.schema";
 import { Kuro, KuroSchema } from "./schemas/kuro.schema";
 import { Point } from "./schemas/point.schema";
 import { PointSchema } from "./schemas/point.schema";
-import { Jackpot, JackpotContribution, JackpotFeeSchema, JackpotSchema } from "./schemas/jackpot.schema";
 import { Round, RoundSchema } from "./schemas/round.schema";
 
 @Module({
@@ -21,8 +20,6 @@ import { Round, RoundSchema } from "./schemas/round.schema";
       { name: Pool.name, schema: PoolSchema },
       { name: Kuro.name, schema: KuroSchema },
       { name: Point.name, schema: PointSchema },
-      { name: JackpotContribution.name, schema: JackpotFeeSchema },
-      { name: Jackpot.name, schema: JackpotSchema },
       {name:TokenBlocklist.name, schema: TokenBlocklistSchema},
     ]),
   ],
