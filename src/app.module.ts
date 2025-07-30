@@ -14,7 +14,7 @@ import { JwtStrategy } from './services/JwtStrategy';
 import { KuroModule } from './kuro/kuro.module';
 import { SocketModule } from './socket/socket.module';
 import { JackpotModule } from './jackpot/jackpot.module';
-
+import { KeeperModule } from './keeper/keeper.module';
 @Module({
   imports: [AuthModule, PointModule,SharedModelModule,
     ConfigModule.forRoot({isGlobal: true, envFilePath: ['.env']}),
@@ -37,6 +37,7 @@ import { JackpotModule } from './jackpot/jackpot.module';
       inject: [ConfigService],
       global: true,
     }),
+    KeeperModule,
     KuroModule,
     SocketModule,
     JackpotModule,
