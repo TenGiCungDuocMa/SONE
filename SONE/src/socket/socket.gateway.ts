@@ -107,6 +107,7 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
         }
     }
 
+    // chỉ định tên sự kiện mà server sẽ lắng nghe từ client
     @SubscribeMessage('subscribeToRound')
     handleSubscribeToRound(client: Socket, roundId: number) {
         this.logger.log(`Client ${client.id} subscribed to round ${roundId}`);

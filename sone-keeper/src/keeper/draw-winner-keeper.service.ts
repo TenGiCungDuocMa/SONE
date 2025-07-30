@@ -70,7 +70,7 @@ export class DrawWinnerKeeperService implements OnModuleInit {
 
         this.client = createPublicClient({
             chain: customChain,
-            transport
+            transport,
         });
         this.walletClient = createWalletClient({
             account: this.account,
