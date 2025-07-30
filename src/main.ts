@@ -22,7 +22,7 @@ async function bootstrap() {
     customSiteTitle: "API Docs", // Optional: Customize the page title
   });
 
-  const port = process.env.PORT || 3333;
+  const port = Number(process.env.PORT) || 3333;
   await app.listen(port);
 }
 bootstrap();

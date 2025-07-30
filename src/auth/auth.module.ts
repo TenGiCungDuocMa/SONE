@@ -5,11 +5,10 @@ import { SharedModelModule } from '../shared/shared-model.module';
 import { JwtService } from '@nestjs/jwt';
 import { PointService } from '../point/point.service';
 import { JwtAuthGuard } from '../services/JwtAuthGuard';
-import { TestService } from './test.service';
 @Module({
   imports: [SharedModelModule],
   controllers: [AuthController],
-  providers: [AuthService,PointService,JwtAuthGuard, JwtService, TestService],
+  providers: [AuthService,PointService,JwtAuthGuard, JwtService],
 })
 export class AuthModule {}
  
