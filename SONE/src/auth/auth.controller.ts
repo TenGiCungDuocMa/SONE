@@ -28,11 +28,6 @@ export class AuthController {
   private readonly logger = new Logger(AuthController.name);
   constructor(private readonly authService: AuthService) {}
 
-  @Get('sign-message/:message')
-  @ApiOperation({
-    summary: 'Get sign message',
-    description: 'Returns a message for the user to sign using their wallet.',
-  })
   @Post('request-signature/:address')
   @ApiOperation({
     summary: 'Request a signature message',

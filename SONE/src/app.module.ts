@@ -13,7 +13,6 @@ import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './services/JwtStrategy';
 import { KuroModule } from './kuro/kuro.module';
 import { SocketModule } from './socket/socket.module';
-import { KeeperModule } from './keeper/keeper.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({
@@ -39,7 +38,6 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
       inject: [ConfigService],
       global: true,
     }),
-    KeeperModule,
     KuroModule,
     SocketModule,
   ],
