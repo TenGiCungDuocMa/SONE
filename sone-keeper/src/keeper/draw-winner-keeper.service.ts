@@ -55,7 +55,7 @@ export class DrawWinnerKeeperService implements OnModuleInit {
             name: "Somnia Testnet",
             nativeCurrency: {
                 name: "Somnia",
-                symbol: "SOM",
+                symbol: "STT",
                 decimals: 18,
             },
             rpcUrls: {
@@ -85,12 +85,12 @@ export class DrawWinnerKeeperService implements OnModuleInit {
                 address: this.account.address,
             });
 
-            this.logger.log(`[KEEPER_KURO] Keeper wallet balance: ${formatEther(balance)} MON`);
+            this.logger.log(`[KEEPER_KURO] Keeper wallet balance: ${formatEther(balance)} STT`);
 
             // If balance is very low, log a warning
-            if (balance < BigInt(10000000000000000)) { // 0.01 MON
-                this.logger.warn(`[KEEPER_KURO] Low keeper wallet balance! Current balance: ${formatEther(balance)} MON`);
-                this.logger.warn(`[KEEPER_KURO] Please fund the account ${this.account.address} with some MON for gas fees.`);
+            if (balance < BigInt(10000000000000000)) { // 0.01 STT
+                this.logger.warn(`[KEEPER_KURO] Low keeper wallet balance! Current balance: ${formatEther(balance)} STT`);
+                this.logger.warn(`[KEEPER_KURO] Please fund the account ${this.account.address} with some STT for gas fees.`);
             }
         } catch (error) {
             this.logger.error(`[KEEPER_KURO] Error checking keeper wallet balance: ${error.message}`);
@@ -109,7 +109,7 @@ export class DrawWinnerKeeperService implements OnModuleInit {
             this.transactionInProgress = true;
             this.logger.log('[KEEPER_KURO] Checking if a winner needs to be drawn...');
 
-            const kuryoAddress = this.configService.get<string>('KURO_ADDRESS');
+            const kuryoAddress = this.configService.get<string>('SONE_ADDRESS');
             this.logger.debug(`[KEEPER_KURO] Using contract address: ${kuryoAddress}`);
 
             // Get current block information
@@ -156,7 +156,7 @@ export class DrawWinnerKeeperService implements OnModuleInit {
                     args: [currentRoundId],
                 });
 
-                this.logger.log(`[KEEPER_KURO] Total Deposits: ${formatEther(totalDeposits as bigint)} MON`);
+                this.logger.log(`[KEEPER_KURO] Total Deposits: ${formatEther(totalDeposits as bigint)} STT`);
                 this.logger.log(`[KEEPER_KURO] Winner Address: ${winner}`);
             } catch (error) {
                 this.logger.debug(`[KEEPER_KURO] Could not get additional round info: ${error.message}`);
@@ -190,17 +190,17 @@ export class DrawWinnerKeeperService implements OnModuleInit {
 
                 const minimumBalance = BigInt(10000000000000000);
 
-                this.logger.log(`[KEEPER_KURO] Current balance: ${formatEther(balance)} MON`);
-                this.logger.log(`[KEEPER_KURO] Minimum required balance: ${formatEther(minimumBalance)} MON`);
+                this.logger.log(`[KEEPER_KURO] Current balance: ${formatEther(balance)} STT`);
+                this.logger.log(`[KEEPER_KURO] Minimum required balance: ${formatEther(minimumBalance)} STT`);
 
                 if (balance < minimumBalance) {
                     this.logger.error(`[KEEPER_KURO] ❌ Insufficient balance to pay for gas!`);
-                    this.logger.error(`[KEEPER_KURO] Current balance: ${formatEther(balance)} MON`);
-                    this.logger.error(`[KEEPER_KURO] Please fund the account ${this.account.address} with some MON for gas fees.`);
+                    this.logger.error(`[KEEPER_KURO] Current balance: ${formatEther(balance)} STT`);
+                    this.logger.error(`[KEEPER_KURO] Please fund the account ${this.account.address} with some STT for gas fees.`);
                     return;
                 }
 
-                this.logger.log(`[KEEPER_KURO] ✅ Account balance sufficient: ${formatEther(balance)} MON. Enough for ~${Number(balance / minimumBalance)} more rounds.`);
+                this.logger.log(`[KEEPER_KURO] ✅ Account balance sufficient: ${formatEther(balance)} STT. Enough for ~${Number(balance / minimumBalance)} more rounds.`);
 
                 try {
                     this.logger.log('[KEEPER_KURO] 🚀 Attempting to call drawWinner function...');

@@ -8,8 +8,6 @@ import {
 import { User, UserSchema } from "src/auth/schemas/user.schema";
 import { Pool, PoolSchema } from "./schemas/pool.schema";
 import { Kuro, KuroSchema } from "./schemas/kuro.schema";
-import { Point } from "./schemas/point.schema";
-import { PointSchema } from "./schemas/point.schema";
 import { Round, RoundSchema } from "./schemas/round.schema";
 
 @Module({
@@ -19,7 +17,6 @@ import { Round, RoundSchema } from "./schemas/round.schema";
       { name: Round.name, schema: RoundSchema },
       { name: Pool.name, schema: PoolSchema },
       { name: Kuro.name, schema: KuroSchema },
-      { name: Point.name, schema: PointSchema },
       {name:TokenBlocklist.name, schema: TokenBlocklistSchema},
     ]),
   ],

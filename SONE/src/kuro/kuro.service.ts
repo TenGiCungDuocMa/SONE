@@ -8,6 +8,7 @@ import { Kuro, KuroStatus } from 'src/shared/schemas/kuro.schema';
 import { Cron } from '@nestjs/schedule';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { SoneABI } from 'src/abi/SoneABI';
+import { User } from 'src/auth/schemas/user.schema';
 
 @Injectable()
 export class KuroService implements OnModuleInit {
@@ -20,6 +21,7 @@ export class KuroService implements OnModuleInit {
     private configService: ConfigService,
     private depositTrackerService: DepositTrackerService,
     @InjectModel(Kuro.name) private kuroModel: Model<Kuro>,
+    @InjectModel(User.name) private userModel: Model<User>,
     private eventEmitter: EventEmitter2,
   ) {
     const rpcUrl = <string>this.configService.get<string>('RPC_URL');
@@ -264,6 +266,28 @@ export class KuroService implements OnModuleInit {
         Number(roundId),
       );
       this.logger.log(`[KURO_SERVICE] Participants: ${participants}`);
+
+      // Calculate and update totalPoints for each participant in userModel
+      for (const participant of participants) {
+        try {
+          let points = 1; // 1 point for being a participant
+          // Add 5 points if the participant is the winner
+          if (
+            winner !== '0x0000000000000000000000000000000000000000' &&
+            participant.address.toLowerCase() === winner.toLowerCase()
+          ) {
+            points += 5;
+          }
+
+          // Update userModel with totalPoints
+          await this.userModel.findOneAndUpdate(
+            { address: participant.address },
+            { $inc: { totalPoints: points }}
+          );
+        } catch (error) {
+          this.logger.error(`Error updating points for participant ${participant.address}: ${error.message}`);
+        }
+      }
 
       await this.kuroModel.findOneAndUpdate(
         {

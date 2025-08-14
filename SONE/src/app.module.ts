@@ -14,9 +14,11 @@ import { JwtStrategy } from './services/JwtStrategy';
 import { KuroModule } from './kuro/kuro.module';
 import { SocketModule } from './socket/socket.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [AuthModule, PointModule,SharedModelModule,
+    ScheduleModule.forRoot(),
     ConfigModule.forRoot({isGlobal: true, envFilePath: ['.env']}),
     EventEmitterModule.forRoot(),
     MongooseModule.forRootAsync({

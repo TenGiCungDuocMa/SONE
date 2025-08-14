@@ -8,6 +8,6 @@ export class PointController {
 
   @Get("get-point-decrease")
   async getPointDecrease(){
-    return 
+    return this.pointService.getUsersSortedByPointsDesc();
   }
 }
